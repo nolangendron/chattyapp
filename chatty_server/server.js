@@ -1,14 +1,9 @@
-// server.js
-
 const express = require("express");
 const SocketServer = require("ws").Server;
 const WebSocket = require("ws");
 const uuidV4 = require("uuid/v4");
 
-// Set the port to 3001
 const PORT = 3001;
-
-// Create a new express server
 const server = express()
   // Make the express server serve static assets (html, javascript, css) from the /public folder
   .use(express.static("public"))
@@ -19,49 +14,72 @@ const server = express()
 // Create the WebSockets server
 const wss = new SocketServer({ server });
 
-// Set up a callback that will run when a client connects to the server
-// When a client connects they are assigned a socket, represented by
-// the ws parameter in the callback.
-const clientsConnected = { clientCounter: 0 };
+function randomColorToUser() {
+  const hexadecinalDigits = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += hexadecinalDigits[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+function broadcast(data) {
+  wss.clients.forEach(function each(client) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(data));
+    }
+  });
+}
+
+function notifyChatOfUserStatus(num, clientStatus) {
+  const clientsConnected = {
+    id: uuidV4(),
+    type: "usersConnectedCount",
+    usersConnected: num,
+    content: `A user ${clientStatus} this Chat.`
+  };
+  broadcast(clientsConnected);
+}
 
 wss.on("connection", ws => {
   console.log("Client connected");
 
-  if (ws) {
-    clientsConnected.clientCounter++;
-  }
+  ws.userColor = randomColorToUser();
 
-  wss.broadcast = function broadcast(data) {
-    wss.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(data));
-      }
-    });
-  };
-  wss.broadcast(clientsConnected);
+  notifyChatOfUserStatus(wss.clients.size, "joined");
 
   ws.on("message", message => {
-    let incomingMessage = JSON.parse(message);
-    switch (incomingMessage.message.type) {
+    const incomingMessage = JSON.parse(message).message;
+    let returnMessage = "";
+    switch (incomingMessage.type) {
       case "postNotification":
-        incomingMessage.message.type = "incomingNotification";
-        incomingMessage.message["id"] = uuidV4();
-        wss.broadcast(incomingMessage);
+        returnMessage = {
+          id: uuidV4(),
+          type: "incomingNotification",
+          content: `${
+            incomingMessage.previousUsername
+          } changed their username to ${incomingMessage.newUsername}`
+        };
+        broadcast(returnMessage);
         break;
       case "postMessage":
-        incomingMessage.message.type = "incomingMessage";
-        incomingMessage.message["id"] = uuidV4();
-        wss.broadcast(incomingMessage);
+        returnMessage = {
+          id: uuidV4(),
+          type: "incomingMessage",
+          username: incomingMessage.username,
+          userColor: ws.userColor,
+          content: incomingMessage.content
+        };
+        broadcast(returnMessage);
         break;
-      default:
-        throw new Error(`Unknown event type: ${incomingMessage.message.type}`);
+      // default:
+      //   throw new Error(`Unknown event type: ${incomingMessage.type}`);
     }
   });
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
   ws.on("close", () => {
     console.log("Client disconnected");
-    clientsConnected.clientCounter--;
-    wss.broadcast(clientsConnected);
+    notifyChatOfUserStatus(wss.clients.size, "left");
   });
 });

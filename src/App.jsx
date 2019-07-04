@@ -1,36 +1,42 @@
 import React, { Component } from "react";
+import Navbar from "./Navbar.jsx";
 import MessageList from "./MessageList.jsx";
 import ChatBar from "./ChatBar.jsx";
 
-const data = {
-  currentUser: { name: "Annoymous" },
-  messages: []
-};
 class App extends Component {
   constructor(props) {
     super(props);
-    this.state = data;
+    this.state = {
+      currentUser: { name: "Anonymous" },
+      messages: [],
+      usersConnected: ""
+    };
     this.webSocket = new WebSocket("ws://localhost:3001");
     this.sendMessageToServer = this.sendMessageToServer.bind(this);
     this.handleNewMessage = this.handleNewMessage.bind(this);
     this.componentDidMount = this.componentDidMount.bind(this);
   }
 
+  //Sends a new message to server when typed into chatbar
   sendMessageToServer = message => {
     this.webSocket.send(JSON.stringify(message));
     console.log("message sent to server");
   };
 
+  notifyOfUsernameChange = message => {
+    const newNotification = {
+      type: "postNotification",
+      previousUsername: this.state.currentUser.name,
+      newUsername: message.username
+    };
+
+    this.state.currentUser.name = message.username;
+    this.sendMessageToServer({ message: newNotification });
+  };
+
   handleNewMessage = message => {
     if (this.state.currentUser.name !== message.username) {
-      const newNotification = {
-        type: "postNotification",
-        content: `${this.state.currentUser.name} changed their username to ${
-          message.username
-        }`
-      };
-      this.state.currentUser.name = message.username;
-      this.sendMessageToServer({ message: newNotification });
+      this.notifyOfUsernameChange(message);
     }
     const newMessage = {
       type: "postMessage",
@@ -46,40 +52,39 @@ class App extends Component {
     };
     this.webSocket.onmessage = event => {
       let serverMessage = JSON.parse(event.data);
-      let serverMessages = [];
-      if (Number.isInteger(serverMessage.clientCounter)) {
-        this.state.clientsConnected = serverMessage.clientCounter;
-      }
-      switch (serverMessage.message.type) {
+      console.log(serverMessage);
+      let serverMessages = this.state.messages;
+
+      switch (serverMessage.type) {
+        case "usersConnectedCount":
+          serverMessages.push(serverMessage);
+          this.setState({
+            messages: serverMessages,
+            usersConnected: serverMessage.usersConnected
+          });
+          break;
         case "incomingMessage":
-          serverMessages.push(serverMessage.message);
+          serverMessages.push(serverMessage);
+          this.setState({
+            messages: serverMessages
+          });
           break;
         case "incomingNotification":
-          serverMessages.push(serverMessage.message);
+          serverMessages.push(serverMessage);
+          this.setState({
+            messages: serverMessages
+          });
           break;
         default:
-          throw new Error("Unknown event type " + serverMessage.message.type);
+          throw new Error("Unknown event type " + serverMessage.type);
       }
-      this.setState({ messages: this.state.messages.concat(serverMessages) });
     };
   }
 
   render() {
     return (
       <div>
-        <nav className="navbar">
-          <a href="/" className="navbar-brand">
-            Chatty
-          </a>
-          {this.state.clientsConnected ? (
-            <a className="navbar-brand clients">
-              {" "}
-              {this.state.clientsConnected} Clients Connected
-            </a>
-          ) : (
-            <a className="navbar-brand clients"> 0 Clients Connected</a>
-          )}
-        </nav>
+        <Navbar clients={this.state.usersConnected} />
         <MessageList messages={this.state.messages} />
         <ChatBar
           handleNewMessage={this.handleNewMessage}
