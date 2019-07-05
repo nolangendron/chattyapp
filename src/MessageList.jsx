@@ -7,7 +7,10 @@ class MessageList extends Component {
     return (
       <main className="messages list-group">
         {this.props.messages.map(message => {
-          if (message.type === "incomingNotification") {
+          if (
+            message.type === "incomingNotification" ||
+            message.type === "usersConnectedCount"
+          ) {
             return <Notification key={message.id} content={message.content} />;
           } else {
             return (

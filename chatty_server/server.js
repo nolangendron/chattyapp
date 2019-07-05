@@ -15,12 +15,10 @@ const server = express()
 const wss = new SocketServer({ server });
 
 function randomColorToUser() {
-  const hexadecinalDigits = "0123456789ABCDEF";
-  let color = "#";
-  for (let i = 0; i < 6; i++) {
-    color += hexadecinalDigits[Math.floor(Math.random() * 16)];
-  }
-  return color;
+  let colors = ["#e6194B", "#4363d8", "#911eb4", "#f032e6"];
+  let randomColor = "";
+  randomColor += colors[Math.floor(Math.random() * 4)];
+  return randomColor;
 }
 
 function broadcast(data) {
@@ -36,7 +34,7 @@ function notifyChatOfUserStatus(num, clientStatus) {
     id: uuidV4(),
     type: "usersConnectedCount",
     usersConnected: num,
-    content: `A user ${clientStatus} this Chat.`
+    content: `A user ${clientStatus} this Chat`
   };
   broadcast(clientsConnected);
 }

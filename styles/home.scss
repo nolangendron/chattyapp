@@ -1,14 +1,13 @@
 body {
   background: white;
   color: black;
-  font-family: "Open Sans", sans-serif;
-  font-size: 14px;
+  // font-family: "Roboto", sans-serif;
+  font-size: 20px;
   margin: 70px 0;
 }
 
 .chatbar {
-  background: #3da5d9;
-  border-top: 1px solid black;
+  background: #0e1428;
   bottom: 0;
   display: flex;
   left: 0;
@@ -20,11 +19,12 @@ body {
 .chatbar-message,
 .chatbar-username {
   border: 1px solid black;
+  border-radius: 10px;
   display: block;
   height: 40px;
   line-height: 40px;
-  margin: 5px;
-  padding: 0 9px;
+  margin: 10px;
+  padding: 0 10px;
 }
 
 .chatbar-message {
@@ -54,22 +54,28 @@ body {
 .message-username {
   overflow: hidden;
   margin: 5px;
-  padding: 0 10px;
+  padding: 10px 10px;
 }
 
 .message-content {
   flex: 8;
 }
 
+.message-content:nth-of-type(2) {
+  background: lightgrey;
+  border-radius: 10px;
+}
+
 .message-username {
   flex: 2;
   font-family: "Roboto", sans-serif;
   font-weight: 700;
+  margin: 5px;
 }
 
 .navbar {
-  background: #3da5d9;
-  border-bottom: 1px solid black;
+  background: #0e1428;
+  color: white;
   height: 60px;
   left: 0;
   padding: 0 10px;
