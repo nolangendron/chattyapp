@@ -4,6 +4,10 @@ Many of the web applications that you use today have real-time functionality whe
 
 THis app, Chatty, allows users to communicate with each other without having to register accounts. It uses React, as well as modern tools for Node including Webpack and Babel.
 
+##Screenshots
+
+!["Chatty app with two users connected"](https://github.com/nolangendron/chattyapp/blob/master/docs/Chatty_App_2_Users.png?raw=true)
+
 ### Dependencies
 
 - React
