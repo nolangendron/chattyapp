@@ -17,12 +17,13 @@ class App extends Component {
     this.componentDidMount = this.componentDidMount.bind(this);
   }
 
-  //Sends a new message to server when typed into chatbar
+  //Sends a new message to server when typed into Chatbar input
   sendMessageToServer = message => {
     this.webSocket.send(JSON.stringify(message));
     console.log("message sent to server");
   };
 
+  //Sends notification to server when user changes their username
   notifyOfUsernameChange = message => {
     const newNotification = {
       type: "postNotification",
